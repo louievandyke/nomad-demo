@@ -28,14 +28,14 @@
   delegate_to: localhost
   become: no
   ansible.builtin.get_url:
-    url: "https://github.com/containous/traefik/releases/download/v{{ traefik_version }}/traefik_v{{ traefik_version }}_linux_amd64.tar.gz"
-    dest: "{{ playbook_dir }}/.ansible_download_cache/traefik_v{{ traefik_version }}_linux_amd64.tar.gz"
+    url: "https://github.com/containous/traefik/releases/download/v{{ traefik_version }}/traefik_v{{ traefik_version }}_linux_arm64.tar.gz"
+    dest: "{{ playbook_dir }}/.ansible_download_cache/traefik_v{{ traefik_version }}_linux_arm64.tar.gz"
     checksum: "sha256:https://github.com/containous/traefik/releases/download/v{{ traefik_version }}/traefik_v{{ traefik_version }}_checksums.txt"
     mode: 0644
 
 - name: Extract Traefik
   ansible.builtin.unarchive:
-    src: "{{ playbook_dir }}/.ansible_download_cache/traefik_v{{ traefik_version }}_linux_amd64.tar.gz"
+    src: "{{ playbook_dir }}/.ansible_download_cache/traefik_v{{ traefik_version }}_linux_arm64.tar.gz"
     dest: /usr/bin
     exclude: [ CHANGELOG.md, LICENSE.md ]
 

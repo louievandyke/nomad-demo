@@ -19,17 +19,13 @@ Vagrant.configure(2) do |config|
       node.vm.network "private_network", ip: node_ip_address
       node.vm.hostname = "consul-nomad-node#{i}"
 
+      # Increase memory for Virtualbox
       node.vm.provider "parallels" do |vb|
         vb.memory = "1024"
-        # Remove modifyvm commands for Parallels
-      end
-
-      node.vm.provider "virtualbox" do |vb|
-        vb.memory = "1024"
-        vb.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
-        vb.customize ["modifyvm", :id, "--uartmode2", "disconnected"]
-        vb.customize ["modifyvm", :id, "--uartmode3", "disconnected"]
-        vb.customize ["modifyvm", :id, "--uartmode4", "disconnected"]
+        vb.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]
+        vb.customize [ "modifyvm", :id, "--uartmode2", "disconnected" ]
+        vb.customize [ "modifyvm", :id, "--uartmode3", "disconnected" ]
+        vb.customize [ "modifyvm", :id, "--uartmode4", "disconnected" ]
       end
     end
   end
@@ -38,16 +34,11 @@ Vagrant.configure(2) do |config|
     node_ip_address = "#{get_ip(0)}"
     lb.vm.network "private_network", ip: node_ip_address
     lb.vm.hostname = "loadbalancer"
-
     lb.vm.provider "parallels" do |vb|
-      # Remove modifyvm commands for Parallels
-    end
-
-    lb.vm.provider "virtualbox" do |vb|
-      vb.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
-      vb.customize ["modifyvm", :id, "--uartmode2", "disconnected"]
-      vb.customize ["modifyvm", :id, "--uartmode3", "disconnected"]
-      vb.customize ["modifyvm", :id, "--uartmode4", "disconnected"]
+      vb.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]
+      vb.customize [ "modifyvm", :id, "--uartmode2", "disconnected" ]
+      vb.customize [ "modifyvm", :id, "--uartmode3", "disconnected" ]
+      vb.customize [ "modifyvm", :id, "--uartmode4", "disconnected" ]
     end
   end
 
@@ -64,4 +55,3 @@ Vagrant.configure(2) do |config|
     }
   end
 end
-

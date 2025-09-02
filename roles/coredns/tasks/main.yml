@@ -28,14 +28,14 @@
   delegate_to: localhost
   become: no
   ansible.builtin.get_url:
-    url: "https://github.com/coredns/coredns/releases/download/v{{ coredns_version }}/coredns_{{ coredns_version }}_linux_amd64.tgz"
-    dest: "{{ playbook_dir }}/.ansible_download_cache/coredns_{{ coredns_version }}_linux_amd64.tgz"
-    checksum: "sha256:https://github.com/coredns/coredns/releases/download/v{{ coredns_version }}/coredns_{{ coredns_version }}_linux_amd64.tgz.SHA256"
+    url: "https://github.com/coredns/coredns/releases/download/v{{ coredns_version }}/coredns_{{ coredns_version }}_linux_arm64.tgz"
+    dest: "{{ playbook_dir }}/.ansible_download_cache/coredns_{{ coredns_version }}_linux_arm64.tgz"
+    checksum: "sha256:https://github.com/coredns/coredns/releases/download/v{{ coredns_version }}/coredns_{{ coredns_version }}_linux_arm64.tgz.SHA256"
     mode: 0644
 
 - name: Extract CoreDNS
   ansible.builtin.unarchive:
-    src: "{{ playbook_dir }}/.ansible_download_cache/coredns_{{ coredns_version }}_linux_amd64.tgz"
+    src: "{{ playbook_dir }}/.ansible_download_cache/coredns_{{ coredns_version }}_linux_arm64.tgz"
     dest: /usr/bin
 
 - name: Create coredns user

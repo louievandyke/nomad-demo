@@ -5,8 +5,8 @@ PLATFORM       := $(shell uname | tr '[:upper:]' '[:lower:]')
 HCLFMT         := $(shell command -v hclfmt 2> /dev/null)
 VAULT_POLICIES := $(wildcard nomad_jobs/*.vault)
 NOMAD_JOBS     := $(wildcard nomad_jobs/*.nomad)
-DOMAIN         := $(shell grep -oP 'domain: \K\w+' group_vars/all.yml)
-
+# new (portable)
+DOMAIN         := $(shell sed -n 's/^[[:space:]]*domain:[[:space:]]*//p' group_vars/all.yml | head -n1)
 
 # First goal acts as default
 #

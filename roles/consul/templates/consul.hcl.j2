@@ -1,14 +1,41 @@
-{% if consul_is_server %}
-bootstrap_expect = {{ groups['consul_nomad'] | length }}
-{% endif %}
-# Make consul UI accessible from everywhere
-client_addr = "0.0.0.0"
-data_dir = "{{ consul_data_dir }}"
-datacenter = "{{ consul_datacenter }}"
-# MUST be 32 bytes, Base64-encoded
-encrypt = "{{ lookup('password', '/tmp/consulhash length=32') | b64encode }}"
-retry_join = {{ consul_nomad_ips | to_json }}
-{% if consul_is_server %}
+{# -- Self IP (prefer default IPv4, fall back to first available) -- #}
+{% set me_ip = (ansible_facts.get('default_ipv4', {}).get('address')
+                or ansible_facts.get('all_ipv4_addresses', [])[0]
+                or '127.0.0.1') %}
+
+{# -- Gather hostvars for the group to safely compute servers/peer IPs -- #}
+{% set hv = groups['consul_nomad'] | map('extract', hostvars) | list %}
+{% set explicit_servers = hv | selectattr('consul_is_server','defined') | selectattr('consul_is_server') | list %}
+{% set server_count = (explicit_servers | length) if (explicit_servers | length) > 0 else (groups['consul_nomad'] | length) %}
+
+{% set ns = namespace(peers=[]) %}
+{% for h in groups['consul_nomad'] %}
+  {% set ip = (hostvars[h].ansible_facts.get('default_ipv4', {}).get('address')
+               or (hostvars[h].ansible_facts.get('all_ipv4_addresses', []) | first)) %}
+  {% if ip and ip != me_ip %}
+    {% set _ = ns.peers.append(ip) %}
+  {% endif %}
+{% endfor %}
+
+{% set i_am_server = hostvars[inventory_hostname].consul_is_server | default(server_count > 0) %}
+
+{% if i_am_server %}
+bootstrap_expect = {{ server_count }}
 server = true
 {% endif %}
+
+# HTTP/UI on all interfaces; gossip/RPC use bind/advertise
+client_addr    = "0.0.0.0"
+bind_addr      = "{{ me_ip }}"
+advertise_addr = "{{ me_ip }}"
+
+data_dir   = "{{ consul_data_dir }}"
+datacenter = "{{ consul_datacenter }}"
+
+# MUST be 32 bytes, Base64-encoded (lookup runs on controller)
+encrypt = "{{ lookup('password', '/tmp/consulhash length=32') | b64encode }}"
+
+# Join the other nodes
+retry_join = {{ ns.peers | to_json }}
+
 ui = true

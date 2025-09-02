@@ -12,14 +12,6 @@
       - unzip
     state: present
 
-- name: Disable Ubuntu motd-news
-  ansible.builtin.lineinfile:
-    dest: /etc/default/motd-news
-    state: present
-    regexp: '^ENABLED='
-    line: 'ENABLED=0'
-  when: ansible_distribution == 'Ubuntu'
-
 - name: Remove "snap" package
   ansible.builtin.apt:
     name: snapd

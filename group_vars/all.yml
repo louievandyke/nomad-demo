@@ -5,7 +5,7 @@ domain: demo
 # Application versions to install, defaults to `latest` (only JDK version needs
 # to be set explicitly). Can be pinned by setting e.g. `consul_version: x.y.z`
 # (see `roles/<component>/defaults/main.yml` for variable name).
-openjdk_version: "16"
+openjdk_version: "11"
 
 # If multiple network interfaces exist in the VM, specify the one matching
 # the IP range defined in Vagrant.

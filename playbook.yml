@@ -19,6 +19,7 @@
   roles:
     - role: base
     - role: consul
+      tags: ['consul']
     - role: jre
     - role: docker
       tags: ['docker']

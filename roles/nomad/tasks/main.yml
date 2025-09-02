@@ -30,14 +30,14 @@
   run_once: true
   become: no
   ansible.builtin.get_url:
-    url: "https://releases.hashicorp.com/nomad/{{ nomad_version }}/nomad_{{ nomad_version }}_linux_amd64.zip"
-    dest: "{{ playbook_dir }}/.ansible_download_cache/nomad_{{ nomad_version }}_linux_amd64.zip"
+    url: "https://releases.hashicorp.com/nomad/{{ nomad_version }}/nomad_{{ nomad_version }}_linux_arm64.zip"
+    dest: "{{ playbook_dir }}/.ansible_download_cache/nomad_{{ nomad_version }}_linux_arm64.zip"
     checksum: "sha256:https://releases.hashicorp.com/nomad/{{ nomad_version }}/nomad_{{ nomad_version }}_SHA256SUMS"
     mode: 0644
 
 - name: Extract Nomad
   ansible.builtin.unarchive:
-    src: "{{ playbook_dir }}/.ansible_download_cache/nomad_{{ nomad_version }}_linux_amd64.zip"
+    src: "{{ playbook_dir }}/.ansible_download_cache/nomad_{{ nomad_version }}_linux_arm64.zip"
     dest: /usr/bin
 
 - name: Create nomad user

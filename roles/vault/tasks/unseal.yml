@@ -1,14 +1,66 @@
 ---
-- name: Reading unseal key contents # noqa no-changed-when
+# Read unseal keys from the controller (your host)
+- name: Read unseal key contents  # noqa no-changed-when
   delegate_to: localhost
-  become: no
+  become: false
   ansible.builtin.command: "cat {{ item }}"
-  register: _vault_unseal_keys
   with_fileglob: "{{ vault_unseal_keys_dir }}/*"
+  register: vault_unseal_keys
 
-- name: Unseal Vault with unseal keys # noqa no-changed-when
-  no_log: yes
+# Check sealed state on this node
+- name: Check sealed state (json)
+  ansible.builtin.command: vault status -format=json
+  environment:
+    VAULT_ADDR: "http://127.0.0.1:8200"
+  register: vault_status_json
+  changed_when: false
+  failed_when: false
+
+# Unseal only if sealed
+- name: Unseal Vault with unseal keys (only if sealed)  # noqa no-changed-when
+  no_log: true
   ansible.builtin.command: "vault operator unseal {{ item.stdout }}"
   environment:
     VAULT_ADDR: "http://127.0.0.1:8200"
-  with_items: "{{ _vault_unseal_keys.results }}"
+  loop: "{{ vault_unseal_keys.results | default([]) }}"
+  when: (vault_status_json.stdout | default('{}') | from_json).sealed | default(true)
+
+# Re-check status to know if this is the active node
+- name: Re-check status (json)
+  ansible.builtin.command: vault status -format=json
+  environment:
+    VAULT_ADDR: "http://127.0.0.1:8200"
+  register: vault_status_json_after
+  changed_when: false
+  failed_when: false
+
+# **Use the root token saved on the controller during init**
+- name: Compute VAULT_TOKEN to use
+  ansible.builtin.set_fact:
+    _vault_token_effective: "{{ vault_root_token | default(lookup('file', playbook_dir ~ '/credentials/vault-root/root_token')) }}"
+
+# Get current audit devices so we can be idempotent
+- name: Get audit devices (json)
+  ansible.builtin.command: vault audit list -format=json
+  environment:
+    VAULT_ADDR: "http://127.0.0.1:8200"
+    VAULT_TOKEN: "{{ _vault_token_effective }}"
+  register: vault_audit_list
+  changed_when: false
+  failed_when: false   # nonzero on standbys or before any audit device exists
+
+# Enable syslog audit only on the active node AND only if not already enabled
+- name: Enable syslog audit (only on active, idempotent)
+  ansible.builtin.command: vault audit enable syslog
+  environment:
+    VAULT_ADDR: "http://127.0.0.1:8200"
+    VAULT_TOKEN: "{{ _vault_token_effective }}"
+  when:
+    - (vault_status_json_after.stdout | default('{}') | from_json).active | default(false)
+    - >
+      (
+        vault_audit_list.stdout is defined and
+        (
+          'syslog/' not in ((vault_audit_list.stdout | from_json).keys() | list)
+        )
+      ) or (vault_audit_list.rc | default(1)) != 0
